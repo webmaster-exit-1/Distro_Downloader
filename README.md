@@ -58,15 +58,16 @@ A script to download various Linux distributions' ISO files easily.
 ```
 
 Usage
+
  1. Clone repository:
 
 `git clone <repository-url>`
 `cd <repo>`
 
- 2. Make script executable:
+2. Make script executable:
 
 `chmod a+x distro_dowloader.sh`
 
- 3. Ru thescrit:
+3. Run the scrit:
 
  `./distro_dowloader.sh`
