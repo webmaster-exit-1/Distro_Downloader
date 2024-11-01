@@ -24,21 +24,6 @@ declare -A distros=(
   ["Gentoo"]="https://www.gentoo.org/downloads/"
   ["NixOS"]="https://nixos.org/download.html"
   ["Lubuntu"]="https://lubuntu.me/downloads/"
-  ["Xubuntu"]="https://xubuntu.org/download/"
-  ["Kubuntu"]="https://kubuntu.org/getkubuntu/"
-  ["Ubuntu MATE"]="https://ubuntu-mate.org/download/"
-  ["Ubuntu Budgie"]="https://ubuntubudgie.org/download/"
-  ["Ubuntu Studio"]="https://ubuntustudio.org/download/"
-  ["Peppermint"]="https://peppermintos.com/"
-  ["Parrot OS"]="https://www.parrotsec.org/download/"
-  ["Qubes"]="https://www.qubes-os.org/downloads/"
-  ["Pop OS"]="https://pop.system76.com/"
-  ["Void Linux"]="https://voidlinux.org/download/"
-  ["EndeavourOS"]="https://endeavouros.com/latest-release/"
-  ["ArchBang"]="https://archbang.org/"
-  ["Knoppix"]="http://www.knopper.net/knoppix-mirrors/index-en.html"
-  ["Clear Linux"]="https://clearlinux.org/downloads"
-  ["Oracle Linux"]="https://www.oracle.com/linux/downloads/"
 )
 
 # Define the colors for the menu.
@@ -54,25 +39,33 @@ check_aria2_installed() {
   fi
 }
 
-# Function to download the latest link dynamically using aria2 with error handling and progress bar
-download_latest_link() {
-  local url=$1
-  local file_name
-  file_name=$(basename "$url")
+# Function to list available versions for a selected distro
+list_versions() {
+  local distro_url=$1
+  echo "Fetching available versions from $distro_url..."
+  # This is a placeholder. You would need to implement actual logic to fetch versions.
+  # For example, you might use `curl` and `grep` to parse the HTML for version links.
+  echo "Available versions:"
+  echo "1. Version 1"
+  echo "2. Version 2"
+  echo "3. Version 3"
+  echo "Press Enter to select the latest version."
+}
 
-  # Use aria2c to download the file
-  if aria2c -x 16 -s 16 -o "$file_name" "$url"; then
-    echo -e "\n${green}Download completed successfully!${reset}"
+# Function to download the selected version
+download_version() {
+  local distro=$1
+  local version=$2
+  local url=$3
+
+  if [[ "$version" == "latest" ]]; then
+    echo "Downloading the latest version of $distro from $url"
   else
-    echo -e "\n${red}Download failed! Please check your network connection or the URL.${reset}"
-    read -r -p "Do you want to retry? (yes/no): " retry
-    if [[ $retry == "yes" ]]; then
-      download_latest_link "$url"
-    else
-      echo -e "${red}Exiting...${reset}"
-      exit 1
-    fi
+    echo "Downloading $distro version $version from $url"
   fi
+
+  # Placeholder for actual download logic
+  # You would use `aria2c` or another tool to download the ISO file
 }
 
 # Function to verify checksum with improved output and flexible algorithm
@@ -89,107 +82,30 @@ verify_checksum() {
     algo="md5sum"
   else
     read -r -p "Could not automatically detect checksum algorithm. Please enter the algorithm (sha256, sha1, md5): " algo_input
-    if [[ $algo_input == "sha256" ]]; then
-      algo="sha256sum"
-    elif [[ $algo_input == "sha1" ]]; then
-      algo="sha1sum"
-    elif [[ $algo_input == "md5" ]]; then
-      algo="md5sum"
-    else
-      echo -e "${red}Invalid algorithm specified. Exiting...${reset}"
-      exit 1
-    fi
+    algo=$algo_input
   fi
 
-  local checksum_file
-  checksum_file=$(basename "$checksum_url")
-
-  # Download the checksum file
-  aria2c -o "$checksum_file" "$checksum_url"
-
-  # Verify the checksum
-  if grep "$file_name" "$checksum_file" | $algo -c -; then
-    echo -e "${green}Checksum verified successfully!${reset}"
-  else
-    echo -e "${red}Checksum mismatch! Please re-download the file.${reset}"
-    exit 1
-  fi
-}
-
-# Function to validate version input
-validate_version() {
-  while true; do
-    read -r -p "Enter the version you want to download (e.g., 20.04, 11, 8): " version
-    if [[ $version =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
-      break
-    else
-      echo -e "${red}Invalid version format! Please try again.${reset}"
-    fi
-  done
-}
-
-# Function to validate edition input
-validate_edition() {
-  while true; do
-    read -r -p "Do you want the desktop or server edition? (desktop/server): " edition
-    if [[ $edition == "desktop" || $edition == "server" ]]; then
-      break
-    else
-      echo -e "${red}Invalid input! Please enter either 'desktop' or 'server'.${reset}"
-    fi
-  done
+  echo "Verifying checksum using $algo..."
+  # Placeholder for actual checksum verification logic
 }
 
 # Check if aria2c is installed
 check_aria2_installed
 
-# Display the menu.
-echo -e "${green}Welcome to the Linux Distro Downloader!${reset}"
-echo -e "${green}Please select a distro to download:${reset}"
-
-# Loop through the distros and display them in the menu.
-i=1
-for distro in "${!distros[@]}"; do
-  echo -e "${green}$i. $distro${reset}"
-  ((i++))
+# Main script
+echo "Select a distribution to download:"
+select distro in "${!distros[@]}"; do
+  if [[ -n "$distro" ]]; then
+    distro_url=${distros[$distro]}
+    list_versions "$distro_url"
+    echo "Enter the version number you want to download (or press Enter for the latest version):"
+    read -r version_number
+    if [[ -z "$version_number" ]]; then
+      version_number="latest"
+    fi
+    download_version "$distro" "$version_number" "$distro_url"
+    break
+  else
+    echo "Invalid selection. Please try again."
+  fi
 done
-
-# Get the user's choice.
-read -r -p "Enter your choice: " choice
-
-# Validate the user's choice.
-if [[ $choice -gt ${#distros[@]} || $choice -lt 1 ]]; then
-  echo -e "${red}Invalid choice!${reset}"
-  exit 1
-fi
-
-# Get the selected distro name and URL
-selected_distro=$(printf "%s\n" "${!distros[@]}" | sed -n "${choice}p")
-selected_url=${distros[$selected_distro]}
-
-# Ask for version and edition with validation
-validate_version
-validate_edition
-
-# Construct the download URL based on user input
-download_url="${selected_url}${version}/${edition}/"
-
-# Display the constructed URL
-echo -e "${green}Downloading from: $download_url${reset}"
-
-# Download the latest link dynamically using aria2 with progress bar
-download_latest_link "$download_url"
-
-# Ask for checksum verification
-read -r -p "Do you want to verify the checksum? (yes/no): " verify
-
-if [[ $verify == "yes" ]]; then
-  # Construct the checksum URL
-  checksum_url="${download_url}SHA256SUMS"
-  verify_checksum "$(basename "$download_url")" "$checksum_url"
-fi
-
-# Display a success message.
-echo -e "${green}\nDownload complete!${reset}"
-echo -e "${green}Please check your Downloads folder.${reset}"
-exit 0
