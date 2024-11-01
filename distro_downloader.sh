@@ -27,14 +27,13 @@ declare -A distros=(
 )
 
 # Define the colors for the menu.
-green="\e[32m"
 red="\e[31m"
 reset="\e[0m"
 
 # Function to check if aria2c is installed
 check_aria2_installed() {
-  if ! command -v aria2c &> /dev/null; then
-    echo -e "${red}aria2c is not installed. Please install aria2c and try again.${reset}"
+  if ! command -v aria2 &> /dev/null; then
+    echo -e "${red}aria2 is not installed. Please install aria2c and try again.${reset}"
     exit 1
   fi
 }
@@ -64,13 +63,14 @@ download_version() {
     echo "Downloading $distro version $version from $url"
   fi
 
-  # Placeholder for actual download logic
-  # You would use `aria2c` or another tool to download the ISO file
+  # Example download command using aria2c
+  aria2c -x 16 -s 16 -k 1M -o "${distro}_${version}.iso" "${url}"
+
 }
 
 # Function to verify checksum with improved output and flexible algorithm
 verify_checksum() {
-  local file_name=$1
+  # local file_name=$1
   local checksum_url=$2
 
   # Detect checksum algorithm based on the checksum file name
