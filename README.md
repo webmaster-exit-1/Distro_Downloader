@@ -53,9 +53,7 @@ A script to download various Linux distributions' ISO files easily.
 
 - `aria2c` must be installed on your system. You can install it using:
 
-```sh
-  sudo apt-get install aria2
-```
+`sudo apt-get install aria2`
 
 Usage
 
